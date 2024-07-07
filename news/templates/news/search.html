@@ -1,0 +1,23 @@
+<!-- news/templates/news/search.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search News - The Midnight Times</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>The Midnight Times</h1>
+            <h2>Search News</h2>
+        </header>
+        <form method="get" action="{% url 'search_news' %}">
+            <input type="text" name="q" placeholder="Enter a keyword" required>
+            <button type="submit">Search</button>
+        </form>
+        <a href="{% url 'previous_searches' %}" class="btn btn-primary">Previous Searches</a>
+    </div>
+</body>
+</html>
