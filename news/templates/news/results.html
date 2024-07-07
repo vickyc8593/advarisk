@@ -5,25 +5,34 @@
     <meta charset="UTF-8">
     <title>Search Results - The Midnight Times</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'news/styles.css' %}">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>The Midnight Times</h1>
-            <h2>Search Results</h2>
+            <h1 class="title">Search Results</h1>
         </header>
-        <ul>
-            {% for article in articles %}
-            <li class="article-item">
-                <h3>{{ article.title }}</h3>
-                <p>{{ article.description }}</p>
-                <p>Published at: {{ article.publishedAt }}</p>
-                <a href="{{ article.url }}" target="_blank">Read more</a>
-            </li>
-            {% endfor %}
-        </ul>
-        <a href="{% url 'search_news' %}" class="btn btn-primary">Back to Search</a>
+        <main>
+            <button onclick="fetchLatestResults()" class="refresh-button">Refresh Results</button>
+            <ul class="articles-list">
+                {% for article in articles %}
+                    <li class="article-item">
+                        <h2><a href="{{ article.url }}" target="_blank" class="article-title">{{ article.title }}</a></h2>
+                        <p class="article-description">{{ article.description }}</p>
+                        <p class="article-published">Published on: {{ article.publishedAt }}</p>
+                    </li>
+                {% endfor %}
+            </ul>
+            <a href="{% url 'search_news' %}" class="new-search-link">New Search</a>
+        </main>
     </div>
+
+    <script>
+        function fetchLatestResults() {
+            // Implement your logic to fetch latest results via AJAX or form submission
+            // Example: reload the page to fetch new results
+            location.reload();
+        }
+    </script>
 </body>
 </html>

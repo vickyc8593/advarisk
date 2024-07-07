@@ -1,3 +1,5 @@
+# news/views.py
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponseServerError
 from .models import SearchResult
@@ -8,11 +10,14 @@ def search_news(request):
         keyword = request.GET['q']
         articles = fetch_news_articles(keyword)
 
-        if articles is None:
+        if articles is None:  # Check if articles is None (no results or error)
             return HttpResponseServerError("No articles found or error fetching news articles.")
 
-        if not articles:
+        if not articles:  # Check if articles is empty (no results found)
             return render(request, 'news/no_results.html', {'keyword': keyword})
+
+        # Sort articles by publishedAt (assuming it's already sorted)
+        articles.sort(key=lambda x: x.get('publishedAt', ''), reverse=True)
 
         return render(request, 'news/results.html', {'articles': articles})
 
@@ -27,7 +32,7 @@ def refresh_search(request, search_id):
     keyword = search.keyword
     articles = fetch_news_articles(keyword)
 
-    if not articles:
+    if not articles:  # Check if articles is empty or None
         return render(request, 'news/no_results.html', {'keyword': keyword})
 
     SearchResult.objects.filter(keyword=keyword).delete()
