@@ -1,7 +1,7 @@
-# news/views.py
-
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponseServerError
+from datetime import datetime
+import requests
 from .models import SearchResult
 from .utils import fetch_news_articles
 
@@ -10,14 +10,11 @@ def search_news(request):
         keyword = request.GET['q']
         articles = fetch_news_articles(keyword)
 
-        if articles is None:  # Check if articles is None (no results or error)
+        if articles is None:
             return HttpResponseServerError("No articles found or error fetching news articles.")
 
-        if not articles:  # Check if articles is empty (no results found)
+        if not articles:
             return render(request, 'news/no_results.html', {'keyword': keyword})
-
-        # Sort articles by publishedAt (assuming it's already sorted)
-        articles.sort(key=lambda x: x.get('publishedAt', ''), reverse=True)
 
         return render(request, 'news/results.html', {'articles': articles})
 
@@ -30,13 +27,22 @@ def previous_searches(request):
 def refresh_search(request, search_id):
     search = get_object_or_404(SearchResult, id=search_id)
     keyword = search.keyword
-    articles = fetch_news_articles(keyword)
 
-    if not articles:  # Check if articles is empty or None
+    # Retrieve the latest published_at date from existing search results
+    latest_published_at = SearchResult.objects.filter(keyword=keyword).order_by('-published_at').first()
+    if latest_published_at:
+        latest_published_at = latest_published_at.published_at
+
+    # Fetch new articles published after the latest_published_at date
+    articles = fetch_news_articles(keyword, from_date=latest_published_at)
+
+    if not articles:
         return render(request, 'news/no_results.html', {'keyword': keyword})
 
+    # Delete existing search results for this keyword
     SearchResult.objects.filter(keyword=keyword).delete()
 
+    # Save new search results to the database
     for article in articles:
         title = article.get('title', '')
         description = article.get('description', '')[:255]
