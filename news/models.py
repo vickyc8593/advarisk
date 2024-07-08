@@ -1,5 +1,3 @@
-# news/models.py
-
 from django.db import models
 
 class SearchResult(models.Model):

@@ -1,7 +1,9 @@
 import requests
 from .models import SearchResult
+from datetime import datetime, timedelta
+from django.core.cache import cache
 
-def fetch_news_articles(keyword, from_date=None):
+def fetch_news_articles(keyword):
     NEWS_API_KEY = '3278c0bf0b5541d1aa12cb5bc563de86'
     NEWS_API_URL = 'https://newsapi.org/v2/everything'
 
@@ -10,8 +12,12 @@ def fetch_news_articles(keyword, from_date=None):
         'apiKey': NEWS_API_KEY,
     }
 
-    if from_date:
-        params['from'] = from_date.date().isoformat()
+    # Check if cached data exists
+    cache_key = f'news_articles_{keyword}'
+    cached_data = cache.get(cache_key)
+
+    if cached_data:
+        return cached_data
 
     try:
         response = requests.get(NEWS_API_URL, params=params)
@@ -24,6 +30,14 @@ def fetch_news_articles(keyword, from_date=None):
         articles = data.get('articles', [])
         if not articles:
             return []
+
+        # Filter articles published after the last cached timestamp
+        if cached_data and 'last_fetched' in cached_data:
+            last_fetched = datetime.strptime(cached_data['last_fetched'], '%Y-%m-%dT%H:%M:%SZ')
+            articles = [article for article in articles if datetime.strptime(article['publishedAt'], '%Y-%m-%dT%H:%M:%SZ') > last_fetched]
+
+        # Cache the new data
+        cache.set(cache_key, {'articles': articles, 'last_fetched': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')}, timeout=60 * 15)  # Cache for 15 minutes
 
         return articles
 
